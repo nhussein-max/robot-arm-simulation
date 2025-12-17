@@ -108,14 +108,12 @@ def draw_arm_side_view(x, y, z, details=False):
     # Calculate each joint's endpoint position
     x1, y1 = polar_to_cartesian(l1, shoulder)
     x2, y2 = polar_to_cartesian(l2, shoulder-elbow)
-    x2 += x1
-    y2 += y1
     x3, y3 = polar_to_cartesian(l3, shoulder-elbow-wrist)
     x3 += x2
     y3 += y2 
     
     tx = x3
-    ty = y3 - offset_z
+    ty = y3
 
     # Print each joint's endpoint position
     if details:
