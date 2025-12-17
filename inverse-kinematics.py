@@ -24,7 +24,7 @@ def normalize_degree(theta):
     # Return angle
     return normalized_theta
 
-def get_joints_from_xyz_rel(x, y, z, rx=0, ry=-math.pi/2, rz=0, initial_guess = (math.pi/2, math.pi/2, 0)):
+def get_joints_from_xyz_rel(x, y, z, rx=0, ry=-math.pi/2, rz=0):
     # Get limbs and offsets
     offset_x, offset_y, offset_z = (0, 0, 0.14)     # Tool offset
     l_bs, l1, l2, l3, l_wt = (0.1333, .425, .39225, .1267, .0997)    # Limb lengths
@@ -72,7 +72,7 @@ def get_joints_from_xyz_rel(x, y, z, rx=0, ry=-math.pi/2, rz=0, initial_guess = 
 
 
     # Normalize angles
-    base, shoulder, elbow, wrist1 = [normalize_degree(deg) for deg in [base_theta, *fsolve(inv_kin_r_z, initial_guess)]]
+    base, shoulder, elbow, wrist1 = [normalize_degree(deg) for deg in [base_theta, *fsolve(inv_kin_r_z, (0,0,0))]]
 
     # Return result
     return base, shoulder, elbow, wrist1, ry, rz
@@ -108,12 +108,14 @@ def draw_arm_side_view(x, y, z, details=False):
     # Calculate each joint's endpoint position
     x1, y1 = polar_to_cartesian(l1, shoulder)
     x2, y2 = polar_to_cartesian(l2, shoulder-elbow)
+    x2 += x1
+    y2 += y1
     x3, y3 = polar_to_cartesian(l3, shoulder-elbow-wrist)
     x3 += x2
     y3 += y2 
     
     tx = x3
-    ty = y3
+    ty = y3 - offset_z
 
     # Print each joint's endpoint position
     if details:
