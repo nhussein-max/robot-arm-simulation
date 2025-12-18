@@ -24,36 +24,26 @@ def normalize_degree(theta):
     # Return angle
     return normalized_theta
 
-def get_joints_from_xyz_rel(x, y, z, rx=0, ry=-math.pi/2, rz=0):
+def get_joints_from_xyz_rel(x, y, z, rx=0, ry=-math.pi/2, rz=0, initial_guess = (math.pi/2, math.pi/2, 0)):
     # Get limbs and offsets
     offset_x, offset_y, offset_z = (0, 0, 0.14)     # Tool offset
     l_bs, l1, l2, l3, l_wt = (0.1333, .425, .39225, .1267, .0997)    # Limb lengths
     
     # Calculate base angle and r relative to shoulder joint
-    def calculate_theta(x, y, a):
-        # Calculate if we need the + or - in our equations
-        if (x>a and y>=0) or (x>-a and y<0):
-            flip = 1
-        elif (x<a and y>=0) or (x<-a and y<0):
-            flip = -1
-        else: 
-            # Critical section (x=a, or x=-a). Infinite slope
-            # Return 0 or 180 depending on sign
-            return math.atan2(y, 0) - math.pi/2
-        
+    def calculate_theta(x, y, a):        
         # Calculate tangent line y = mx + b
         if abs(a) != abs(x): # If there is no division by 0
             m = (x*y + math.sqrt(x*x*y*y-(x*x-a*a)*(y*y-a*a)))/(x*x-a*a)
         else: # Deal with edge case when x^2=a^2
-            m = flip*(-a*a+y*y)/(a*y-flip*abs(a*y))
-        b = flip * a * math.sqrt(1+m*m)
+            m = (-a*a+y*y)/(a*y-abs(a*y))
+        b = a * math.sqrt(1+m*m)
 
         # Calculate equivalent tangent point on circle
-        cx = (-flip*m*b)/(1+m*m)
-        cy = m*cx + flip*b
+        cx = (-m*b)/(1+m*m)
+        cy = m*cx + b
 
         # Calculate base angle, make angle negative if flip=1
-        theta = math.atan2(cy, cx) + (-math.pi if flip==1 else 0)
+        theta = math.atan2(cy, cx) - math.pi 
 
         return theta 
     
@@ -72,7 +62,7 @@ def get_joints_from_xyz_rel(x, y, z, rx=0, ry=-math.pi/2, rz=0):
 
 
     # Normalize angles
-    base, shoulder, elbow, wrist1 = [normalize_degree(deg) for deg in [base_theta, *fsolve(inv_kin_r_z, (0,0,0))]]
+    base, shoulder, elbow, wrist1 = [normalize_degree(deg) for deg in [base_theta, *fsolve(inv_kin_r_z, initial_guess)]]
 
     # Return result
     return base, shoulder, elbow, wrist1, ry, rz
