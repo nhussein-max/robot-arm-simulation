@@ -66,9 +66,9 @@ def get_joints_from_xyz_rel(x, y, z, rx=0, ry=-math.pi/2, rz=0, initial_guess = 
     def inv_kin_r_z(p):
         a, b, c = p            
 
-        return (l1*math.cos(a) + l2*math.cos(a-b) + l3*math.cos(a-b-c) - r, # r
-                l1*math.sin(a) + l2*math.sin(a-b) - l3*math.sin(a-b-c) - (l3*math.sin(a-b-c)) - (z + offset_z),  # z
-                a-b-c) # wrist angle
+        return (l1*math.cos(a) + l2*math.cos(a-b) + l3*math.cos(a-b-c) + r, # r
+                l1*math.sin(a) + l2*math.sin(a-b) + l3*math.sin(a-b-c) + (l3*math.sin(a-b-c)) + (z + offset_z),  # z
+                a+b+c) # wrist angle
 
 
     # Normalize angles
@@ -108,12 +108,14 @@ def draw_arm_side_view(x, y, z, details=False):
     # Calculate each joint's endpoint position
     x1, y1 = polar_to_cartesian(l1, shoulder)
     x2, y2 = polar_to_cartesian(l2, shoulder-elbow)
+    x2 += x1
+    y2 += y1
     x3, y3 = polar_to_cartesian(l3, shoulder-elbow-wrist)
     x3 += x2
     y3 += y2 
     
     tx = x3
-    ty = y3
+    ty = y3 - offset_z
 
     # Print each joint's endpoint position
     if details:
