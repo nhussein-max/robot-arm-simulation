@@ -30,20 +30,30 @@ def get_joints_from_xyz_rel(x, y, z, rx=0, ry=-math.pi/2, rz=0, initial_guess = 
     l_bs, l1, l2, l3, l_wt = (0.1333, .425, .39225, .1267, .0997)    # Limb lengths
     
     # Calculate base angle and r relative to shoulder joint
-    def calculate_theta(x, y, a):        
+    def calculate_theta(x, y, a):
+        # Calculate if we need the + or - in our equations
+        if (x>a and y>=0) or (x>-a and y<0):
+            flip = 1
+        elif (x<a and y>=0) or (x<-a and y<0):
+            flip = -1
+        else: 
+            # Critical section (x=a, or x=-a). Infinite slope
+            # Return 0 or 180 depending on sign
+            return math.atan2(y, 0) - math.pi/2
+        
         # Calculate tangent line y = mx + b
         if abs(a) != abs(x): # If there is no division by 0
             m = (x*y + math.sqrt(x*x*y*y-(x*x-a*a)*(y*y-a*a)))/(x*x-a*a)
         else: # Deal with edge case when x^2=a^2
-            m = (-a*a+y*y)/(a*y-abs(a*y))
-        b = a * math.sqrt(1+m*m)
+            m = flip*(-a*a+y*y)/(a*y-flip*abs(a*y))
+        b = flip * a * math.sqrt(1+m*m)
 
         # Calculate equivalent tangent point on circle
-        cx = (-m*b)/(1+m*m)
-        cy = m*cx + b
+        cx = (-flip*m*b)/(1+m*m)
+        cy = m*cx + flip*b
 
         # Calculate base angle, make angle negative if flip=1
-        theta = math.atan2(cy, cx) - math.pi 
+        theta = math.atan2(cy, cx) + (-math.pi if flip==1 else 0)
 
         return theta 
     
@@ -98,14 +108,12 @@ def draw_arm_side_view(x, y, z, details=False):
     # Calculate each joint's endpoint position
     x1, y1 = polar_to_cartesian(l1, shoulder)
     x2, y2 = polar_to_cartesian(l2, shoulder-elbow)
-    x2 += x1
-    y2 += y1
     x3, y3 = polar_to_cartesian(l3, shoulder-elbow-wrist)
     x3 += x2
     y3 += y2 
     
     tx = x3
-    ty = y3 - offset_z
+    ty = y3
 
     # Print each joint's endpoint position
     if details:
